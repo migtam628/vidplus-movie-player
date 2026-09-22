@@ -1,4 +1,8 @@
-import { buildVidPlusUrl, getIframeAttrs } from './core';
+import {
+  buildVidUpUrl,
+  buildVidPlusUrl,
+  getIframeAttrs,
+} from './core';
 import type { MoviePlayerOptions } from './types';
 
 export interface VanillaPlayerInstance {
@@ -9,7 +13,7 @@ export interface VanillaPlayerInstance {
 }
 
 /**
- * Creates a VidPlus MoviePlayer and mounts it into the given container.
+ * Creates a VidUp MoviePlayer and mounts it into the given container.
  */
 export function createMoviePlayer(
   container: string | HTMLElement,
@@ -21,13 +25,15 @@ export function createMoviePlayer(
       : container;
 
   if (!target) {
-    throw new Error(`[vidplus-movie-player] Container not found: ${container}`);
+    throw new Error(
+      `[vidplus-movie-player] Container not found: ${String(container)}`
+    );
   }
 
   let currentOptions = { ...options };
 
   const wrapper = document.createElement('div');
-  wrapper.className = ['vidplus-movie-player', currentOptions.className]
+  wrapper.className = ['vidup-movie-player', currentOptions.className]
     .filter(Boolean)
     .join(' ');
 
@@ -41,11 +47,13 @@ export function createMoviePlayer(
       ...(currentOptions.style || {}),
     });
   };
+
   applyWrapperStyles();
 
   const iframe = document.createElement('iframe');
+
   const applyIframe = () => {
-    const src = buildVidPlusUrl(currentOptions);
+    const src = buildVidUpUrl(currentOptions);
     const attrs = getIframeAttrs(currentOptions);
 
     iframe.src = src;
@@ -63,6 +71,7 @@ export function createMoviePlayer(
       border: '0',
     });
   };
+
   applyIframe();
 
   wrapper.appendChild(iframe);
@@ -71,16 +80,21 @@ export function createMoviePlayer(
   return {
     element: wrapper,
     iframe,
+
     destroy() {
       wrapper.remove();
     },
+
     update(newOptions: Partial<MoviePlayerOptions>) {
       currentOptions = { ...currentOptions, ...newOptions };
+      wrapper.className = ['vidup-movie-player', currentOptions.className]
+        .filter(Boolean)
+        .join(' ');
       applyWrapperStyles();
       applyIframe();
     },
   };
 }
 
-export { buildVidPlusUrl, getIframeAttrs };
+export { buildVidUpUrl, buildVidPlusUrl, getIframeAttrs };
 export type { MoviePlayerOptions };
