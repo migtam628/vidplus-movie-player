@@ -1,6 +1,10 @@
 import { defineComponent, computed, h, type PropType } from 'vue';
-import { buildVidPlusUrl, getIframeAttrs } from './core';
-import type { MoviePlayerProps, ContentType, IconStyle } from './types';
+import { buildVidUpUrl, getIframeAttrs } from './core';
+import type {
+  MoviePlayerProps,
+  ContentType,
+  ExtraVidUpParams,
+} from './types';
 
 const optionalBoolean = () => ({
   type: Boolean,
@@ -14,44 +18,21 @@ export const MoviePlayer = defineComponent({
     id: { type: [String, Number], required: true },
     season: Number,
     episode: Number,
-    dub: optionalBoolean(),
-    autoplay: optionalBoolean(),
-    autonext: optionalBoolean(),
-    nextbutton: optionalBoolean(),
-    progress: Number,
-    primarycolor: String,
-    secondarycolor: String,
-    iconcolor: String,
+
+    autoPlay: optionalBoolean(),
+    autoNext: optionalBoolean(),
+    nextButton: optionalBoolean(),
+    startAt: Number,
+
+    theme: String,
+    sub: String,
+    lang: String,
+    chromecast: optionalBoolean(),
     poster: optionalBoolean(),
     title: optionalBoolean(),
-    icons: String as PropType<IconStyle>,
-    font: String,
-    fontcolor: String,
-    fontsize: Number,
-    opacity: Number,
-    logourl: String,
-    chromecast: optionalBoolean(),
-    watchparty: optionalBoolean(),
-    download: optionalBoolean(),
-    server: [String, Number],
-    servericon: optionalBoolean(),
-    setting: optionalBoolean(),
-    pip: optionalBoolean(),
-    episodelist: optionalBoolean(),
-    hideprimarycolor: optionalBoolean(),
-    hidesecondarycolor: optionalBoolean(),
-    hideiconcolor: optionalBoolean(),
-    hideprogresscontrol: optionalBoolean(),
-    hideiconset: optionalBoolean(),
-    hideautonext: optionalBoolean(),
-    hideautoplay: optionalBoolean(),
-    hidenextbutton: optionalBoolean(),
-    hideposter: optionalBoolean(),
-    hidetitle: optionalBoolean(),
-    hidechromecast: optionalBoolean(),
-    hideepisodelist: optionalBoolean(),
-    hideservericon: optionalBoolean(),
-    hidepip: optionalBoolean(),
+
+    extraParams: Object as PropType<ExtraVidUpParams>,
+
     className: String,
     style: Object as PropType<Record<string, string | number>>,
     aspectRatio: { type: String, default: '16/9' },
@@ -59,15 +40,20 @@ export const MoviePlayer = defineComponent({
     titleAttr: String,
     loading: String as PropType<'lazy' | 'eager'>,
   },
+
   setup(props) {
-    const src = computed(() => buildVidPlusUrl(props as MoviePlayerProps));
-    const iframeAttrs = computed(() => getIframeAttrs(props as MoviePlayerProps));
+    const src = computed(() => buildVidUpUrl(props as MoviePlayerProps));
+    const iframeAttrs = computed(() =>
+      getIframeAttrs(props as MoviePlayerProps)
+    );
 
     return () =>
       h(
         'div',
         {
-          class: ['vidplus-movie-player', props.className].filter(Boolean).join(' '),
+          class: ['vidup-movie-player', props.className]
+            .filter(Boolean)
+            .join(' '),
           style: {
             position: 'relative',
             width: '100%',
