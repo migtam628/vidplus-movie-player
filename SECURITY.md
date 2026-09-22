@@ -10,4 +10,10 @@ Please do not publish exploitable security details in a public issue. Contact th
 
 ## Scope
 
-This package constructs VidPlus iframe URLs and renders iframe wrappers. It does not proxy video traffic, store streaming credentials, host media, or control upstream VidPlus infrastructure. Security issues in the wrapper itself are in scope; upstream-player or third-party-service issues should also be reported to the relevant service operator.
+This package constructs VidUp iframe URLs and renders iframe wrappers. It does not proxy video traffic, resolve direct media URLs, store streaming credentials, host media, or control VidUp infrastructure.
+
+Security issues in this wrapper are in scope. Issues that exist entirely in VidUp or another third-party service should also be reported to the relevant service operator.
+
+## Third-party iframe boundary
+
+VidUp is loaded as a third-party iframe from `https://vidup.to`. Applications embedding it should review their own Content Security Policy, privacy requirements, referrer policy, and third-party-content risk model.
