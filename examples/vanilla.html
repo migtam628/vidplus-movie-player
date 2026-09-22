@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VidPlus MoviePlayer – Vanilla Example</title>
+  <title>VidUp MoviePlayer – Vanilla Example</title>
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -13,48 +13,50 @@
       background: #111;
       color: #eee;
     }
-    h1 { font-size: 1.5rem; }
+
     #player {
       max-width: 800px;
       margin: 1.5rem 0;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
     }
-    .controls {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-      margin-top: 1rem;
-    }
+
     button {
-      background: #6C63FF;
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
+      margin-right: 0.5rem;
+      padding: 0.55rem 0.9rem;
       cursor: pointer;
-      font-weight: 600;
     }
   </style>
 </head>
 <body>
-  <h1>VidPlus MoviePlayer – Vanilla JS</h1>
-  <p>Inception (TMDB 27205)</p>
+  <h1>VidUp MoviePlayer – Vanilla JS</h1>
+  <p>I Am Legend (IMDb tt0480249)</p>
 
   <div id="player"></div>
 
-  <div class="controls">
-    <button id="btn-update">Jump to 2:00</button>
-    <button id="btn-destroy">Destroy</button>
-  </div>
+  <button id="jump">Reload at 2:00</button>
+  <button id="destroy">Destroy</button>
 
   <script type="module">
     // After building locally:
-    // import { createMoviePlayer } from '../dist/vanilla.mjs';
+    import { createMoviePlayer } from '../dist/vanilla.mjs';
 
-    // In a real app, import from the package:
-    // import { createMoviePlayer } from 'vidplus-movie-player/vanilla';
+    const player = createMoviePlayer('#player', {
+      type: 'movie',
+      id: 'tt0480249',
+      autoPlay: false,
+      theme: 'E50914',
+      sub: 'en',
+      titleAttr: 'I Am Legend — VidUp player',
+    });
+
+    document.querySelector('#jump').addEventListener('click', () => {
+      player.update({ startAt: 120 });
+    });
+
+    document.querySelector('#destroy').addEventListener('click', () => {
+      player.destroy();
+    });
   </script>
 </body>
 </html>
