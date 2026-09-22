@@ -1,94 +1,86 @@
-export type ContentType = 'movie' | 'tv' | 'anime';
+export type ContentType = 'movie' | 'tv';
 
-export type IconStyle = 'default' | 'netflix' | 'vid' | 'lucide' | 'tb';
+export type MediaId = string | number;
+
+export type ExtraVidUpParams = Record<string, string | number | boolean>;
 
 export interface MoviePlayerOptions {
-  /** Content type: 'movie' | 'tv' | 'anime' */
+  /** Content type supported by VidUp's public embed URLs. */
   type: ContentType;
-  /** TMDB ID (movie/tv) or AniList ID (anime) */
-  id: string | number;
-  /** Required for TV shows */
+
+  /**
+   * IMDb ID (for example "tt0480249") or numeric TMDB ID.
+   * VidUp supports both forms for movie and TV embed URLs.
+   */
+  id: MediaId;
+
+  /** Required when type="tv". */
   season?: number;
-  /** Required for TV shows and anime */
+
+  /** Required when type="tv". */
   episode?: number;
-  /** Anime only – use dubbed version (default: false) */
-  dub?: boolean;
 
-  /** Auto-start playback (default: true) */
-  autoplay?: boolean;
-  /** Auto-play next episode – TV/Anime only (default: true) */
-  autonext?: boolean;
-  /** Show next episode button – TV/Anime only (default: true) */
-  nextbutton?: boolean;
-  /** Start position in seconds */
-  progress?: number;
+  // VidUp playback parameters
 
-  /** Primary player color (hex without #) e.g. "6C63FF" */
-  primarycolor?: string;
-  /** Progress bar background color (hex without #) */
-  secondarycolor?: string;
-  /** Player icon colors (hex without #) */
-  iconcolor?: string;
-  /** Show poster/thumbnail (default: true) */
-  poster?: boolean;
-  /** Show content title (default: true) */
-  title?: boolean;
-  /** Icon style */
-  icons?: IconStyle;
-  /** Font family e.g. "Poppins" */
-  font?: string;
-  /** Font/subtitle color (hex without #) */
-  fontcolor?: string;
-  /** Font size in pixels */
-  fontsize?: number;
-  /** Font background opacity 0-1 */
-  opacity?: number;
-  /** Custom logo URL */
-  logourl?: string;
+  /** Request automatic playback. Serialized as VidUp's `autoPlay` parameter. */
+  autoPlay?: boolean;
 
-  /** Enable Chromecast (default: true) */
+  /** Request automatic progression to the next TV episode. */
+  autoNext?: boolean;
+
+  /** Show or hide the next-episode button for TV content. */
+  nextButton?: boolean;
+
+  /** Start playback at a position in seconds. */
+  startAt?: number;
+
+  // VidUp appearance / player parameters
+
+  /** VidUp theme color, normally a hex value without "#", e.g. "E50914". */
+  theme?: string;
+
+  /** Preferred subtitle language/code passed to VidUp. */
+  sub?: string;
+
+  /** Preferred language value passed to VidUp when supported upstream. */
+  lang?: string;
+
+  /** Enable or disable Chromecast UI/functionality upstream. */
   chromecast?: boolean;
-  /** Enable WatchParty (default: false) */
-  watchparty?: boolean;
-  /** Enable download */
-  download?: boolean;
-  /** Prefer specific server (name or number) */
-  server?: string | number;
-  /** Show server selection icon (default: true) */
-  servericon?: boolean;
-  /** Show settings icon (default: true) */
-  setting?: boolean;
-  /** Show picture-in-picture icon (default: true) */
-  pip?: boolean;
-  /** Show episode list – TV/Anime only (default: true) */
-  episodelist?: boolean;
 
-  hideprimarycolor?: boolean;
-  hidesecondarycolor?: boolean;
-  hideiconcolor?: boolean;
-  hideprogresscontrol?: boolean;
-  hideiconset?: boolean;
-  hideautonext?: boolean;
-  hideautoplay?: boolean;
-  hidenextbutton?: boolean;
-  hideposter?: boolean;
-  hidetitle?: boolean;
-  hidechromecast?: boolean;
-  hideepisodelist?: boolean;
-  hideservericon?: boolean;
-  hidepip?: boolean;
+  /** Show or hide poster artwork upstream. */
+  poster?: boolean;
 
-  /** CSS class for the wrapper */
+  /** Show or hide the title upstream. */
+  title?: boolean;
+
+  /**
+   * Additional VidUp query parameters.
+   *
+   * Keys are preserved exactly as supplied. This is intentionally an escape
+   * hatch for new VidUp parameters that may be added before this package ships
+   * a typed option for them.
+   */
+  extraParams?: ExtraVidUpParams;
+
+  // Local iframe/layout options. These are never sent to VidUp.
+
+  /** CSS class for the local wrapper. */
   className?: string;
-  /** Inline styles for the wrapper */
+
+  /** Inline styles for the local wrapper. */
   style?: Record<string, string | number>;
-  /** Aspect ratio CSS value (default: "16/9") */
+
+  /** CSS aspect-ratio value. Default: "16/9". */
   aspectRatio?: string;
-  /** Allow fullscreen (default: true) */
+
+  /** Allow iframe fullscreen. Default: true. */
   allowFullScreen?: boolean;
-  /** iframe title attribute for accessibility */
+
+  /** Accessible iframe title. Default: "VidUp Player". */
   titleAttr?: string;
-  /** Loading strategy (default: "lazy") */
+
+  /** Iframe loading strategy. Default: "lazy". */
   loading?: 'lazy' | 'eager';
 }
 
