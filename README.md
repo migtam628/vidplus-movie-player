@@ -1,277 +1,329 @@
-# VidPlus Movie Player
+# VidUp Movie Player
 
-> A typed, framework-friendly wrapper for building and embedding VidPlus movie, TV, and anime players in React, Next.js, Vue 3, Vanilla JavaScript, TypeScript, and plain HTML projects.
+> A typed, framework-friendly wrapper for building and embedding **VidUp** movie and TV players in React, Next.js, Vue 3, Vanilla JavaScript, TypeScript, and plain HTML projects.
 
 [![CI](https://github.com/migtam628/vidplus-movie-player/actions/workflows/ci.yml/badge.svg)](https://github.com/migtam628/vidplus-movie-player/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-ready-blue.svg)](https://www.typescriptlang.org/)
+[![Provider](https://img.shields.io/badge/provider-VidUp-111827.svg)](https://vidup.to/#documentation)
 
+**Upstream provider:** [VidUp](https://vidup.to/)  
+**VidUp documentation:** [https://vidup.to/#documentation](https://vidup.to/#documentation)  
 **Repository:** https://github.com/migtam628/vidplus-movie-player
 
----
-
-## Overview
-
-`vidplus-movie-player` is a lightweight integration layer around the VidPlus iframe player.
-
-It gives applications one consistent API for:
-
-- Movies identified by a **TMDB movie ID**
-- TV episodes identified by a **TMDB TV ID + season + episode**
-- Anime episodes identified by an **AniList ID + episode**
-- React
-- Next.js
-- Vue 3
-- Vanilla JavaScript
-- TypeScript
-- CDN / script-tag usage
-- Direct embed URL generation without rendering a component
-
-The package does **not** host video files, proxy streaming traffic, scrape media, or implement a video engine. It builds a VidPlus embed URL and provides responsive iframe wrappers around that URL.
-
-The core is intentionally framework-independent. React and Vue are optional adapters exposed through separate package entry points, so using the core or Vanilla APIs does not require either framework.
+> **Important:** the GitHub repository and package name currently remain `vidplus-movie-player` for compatibility, but the runtime integration now targets **VidUp (`vidup.to`)**, not VidPlus.
 
 ---
 
-## Table of contents
+## What changed?
 
-1. [Features](#features)
-2. [Architecture](#architecture)
-3. [Supported content types](#supported-content-types)
-4. [Installation](#installation)
-5. [Package entry points](#package-entry-points)
-6. [Quick start](#quick-start)
-7. [React](#react)
-8. [Next.js](#nextjs)
-9. [Vue 3](#vue-3)
-10. [Vanilla JavaScript](#vanilla-javascript)
-11. [CDN / browser global](#cdn--browser-global)
-12. [HTML-only embed](#html-only-embed)
-13. [Core URL builder](#core-url-builder)
-14. [Complete option reference](#complete-option-reference)
-15. [URL behavior](#url-behavior)
-16. [Responsive layout and styling](#responsive-layout-and-styling)
-17. [Vanilla lifecycle API](#vanilla-lifecycle-api)
-18. [Error handling](#error-handling)
-19. [TypeScript](#typescript)
-20. [SSR and hydration](#ssr-and-hydration)
-21. [Security](#security)
-22. [Content Security Policy](#content-security-policy)
-23. [Privacy](#privacy)
-24. [Accessibility](#accessibility)
-25. [Performance](#performance)
-26. [Troubleshooting](#troubleshooting)
-27. [Project structure](#project-structure)
-28. [Development](#development)
-29. [Build system](#build-system)
-30. [Publishing](#publishing)
-31. [Versioning](#versioning)
-32. [Roadmap](#roadmap)
-33. [FAQ](#faq)
-34. [Third-party and legal notice](#third-party-and-legal-notice)
-35. [Contributing](#contributing)
-36. [License](#license)
+This project originally targeted:
+
+```text
+https://player.vidplus.to/embed
+```
+
+It now targets VidUp directly:
+
+```text
+https://vidup.to
+```
+
+That is **not** just a hostname replacement.
+
+VidUp uses a different public URL structure and different query parameter names/casing.
+
+For example:
+
+```text
+https://vidup.to/movie/tt0480249?autoPlay=true
+```
+
+and:
+
+```text
+https://vidup.to/tv/1396/1/1?autoPlay=true&autoNext=true&nextButton=true
+```
+
+The source code, framework adapters, examples, and documentation in this repository are now written around VidUp's URL format.
+
+---
+
+# Table of contents
+
+1. [Overview](#overview)
+2. [Features](#features)
+3. [VidUp URL formats](#vidup-url-formats)
+4. [Supported IDs](#supported-ids)
+5. [Installation](#installation)
+6. [Package entry points](#package-entry-points)
+7. [Quick start](#quick-start)
+8. [React](#react)
+9. [Next.js](#nextjs)
+10. [Vue 3](#vue-3)
+11. [Vanilla JavaScript](#vanilla-javascript)
+12. [Browser / CDN build](#browser--cdn-build)
+13. [HTML-only embed](#html-only-embed)
+14. [Core URL builder](#core-url-builder)
+15. [API reference](#api-reference)
+16. [VidUp query parameters](#vidup-query-parameters)
+17. [Extra parameters](#extra-parameters)
+18. [Responsive layout](#responsive-layout)
+19. [Vanilla lifecycle API](#vanilla-lifecycle-api)
+20. [Migration from VidPlus](#migration-from-vidplus)
+21. [Error handling](#error-handling)
+22. [TypeScript](#typescript)
+23. [SSR and Next.js](#ssr-and-nextjs)
+24. [Security](#security)
+25. [Content Security Policy](#content-security-policy)
+26. [Privacy](#privacy)
+27. [Accessibility](#accessibility)
+28. [Performance](#performance)
+29. [Troubleshooting](#troubleshooting)
+30. [Project structure](#project-structure)
+31. [Development](#development)
+32. [Build system](#build-system)
+33. [CI](#ci)
+34. [Publishing](#publishing)
+35. [Versioning](#versioning)
+36. [Roadmap](#roadmap)
+37. [FAQ](#faq)
+38. [Third-party and legal notice](#third-party-and-legal-notice)
+39. [Contributing](#contributing)
+40. [License](#license)
+
+---
+
+# Overview
+
+`vidplus-movie-player` is a small TypeScript library that wraps VidUp's iframe embed URLs behind one consistent API.
+
+It can:
+
+- Build VidUp movie URLs.
+- Build VidUp TV episode URLs.
+- Accept IMDb IDs.
+- Accept numeric TMDB IDs.
+- Add supported VidUp playback/player query parameters.
+- Render a responsive iframe in React.
+- Render a responsive iframe in Next.js.
+- Render a responsive iframe in Vue 3.
+- Mount a responsive iframe from Vanilla JavaScript.
+- Generate the URL without rendering anything.
+- Produce ESM and CommonJS builds.
+- Produce a browser global bundle.
+- Generate TypeScript declaration files.
+
+The package does **not**:
+
+- Host movies or TV shows.
+- Proxy VidUp traffic.
+- Resolve direct HLS/video URLs.
+- Download media.
+- Scrape content.
+- Fetch TMDB metadata.
+- Fetch IMDb metadata.
+- Replace VidUp's player.
+- Guarantee that a title exists upstream.
+
+It is an iframe integration layer.
 
 ---
 
 # Features
 
-- Framework-agnostic TypeScript core.
-- Strongly typed `movie`, `tv`, and `anime` content modes.
-- Movie embed URL generation from a TMDB ID.
-- TV embed URL generation from TMDB ID, season, and episode.
-- Anime embed URL generation from AniList ID and episode.
-- Anime dub query support.
-- Typed playback options.
-- Typed appearance options.
-- Typed server and feature options.
-- Typed hide-control flags.
-- Responsive iframe wrappers.
-- Default `16 / 9` aspect ratio.
-- Configurable CSS `aspect-ratio`.
+- Framework-independent TypeScript core.
+- VidUp-native URL generation.
+- Movie support.
+- TV episode support.
+- IMDb ID support.
+- TMDB ID support.
+- Exact VidUp camelCase query parameter names.
+- `autoPlay` support.
+- `autoNext` support.
+- `nextButton` support.
+- `startAt` support.
+- `theme` support.
+- `sub` support.
+- `lang` support.
+- `chromecast` support.
+- `poster` support.
+- `title` support.
+- Future-friendly `extraParams`.
 - React / Next.js component.
 - Vue 3 component.
 - Vanilla DOM API.
-- CDN/browser IIFE build.
-- ESM output using explicit `.mjs`.
-- CommonJS output using `.cjs`.
-- TypeScript declaration output.
-- Optional React and Vue peer dependencies.
+- Browser global build.
+- Responsive `16 / 9` wrapper.
+- Custom aspect ratios.
 - Lazy iframe loading by default.
-- Fullscreen support by default.
-- Accessibility title support.
-- Sensible iframe `allow` policy.
-- `strict-origin-when-cross-origin` referrer policy.
-- Vanilla `update()` and `destroy()` methods.
-- Layout-only options are never sent to VidPlus.
-- `undefined` and `null` options are omitted from the query string.
-- Booleans are serialized explicitly as `true` or `false`.
-- Vue Boolean props preserve omission as `undefined` instead of silently forcing upstream options to `false`.
+- Fullscreen enabled by default.
+- Configurable iframe title.
+- TypeScript declarations.
+- ESM `.mjs` builds.
+- CommonJS `.cjs` builds.
+- Optional React dependency.
+- Optional Vue dependency.
+- No React/Vue dependency in the core.
+- Backward-compatible `buildVidPlusUrl()` alias that now generates VidUp URLs.
 
 ---
 
-# Architecture
+# VidUp URL formats
 
-The package is divided into a small core plus framework adapters.
-
-```text
-MoviePlayerOptions
-       |
-       v
-+-------------------+
-| buildVidPlusUrl() |
-+-------------------+
-       |
-       v
-VidPlus embed URL
-       |
-       +-------------------+-------------------+-------------------+
-       |                   |                   |                   |
-       v                   v                   v                   v
-     React               Vue 3              Vanilla            Your UI
-   component           component             adapter          / iframe
-```
-
-The important design rule is that the root package does not import React or Vue.
-
-That means this is valid in a non-framework project:
-
-```ts
-import { buildVidPlusUrl } from 'vidplus-movie-player';
-```
-
-without requiring React or Vue to be installed at runtime.
-
-Framework adapters are explicit:
-
-```ts
-import { MoviePlayer } from 'vidplus-movie-player/react';
-```
-
-```ts
-import { MoviePlayer } from 'vidplus-movie-player/vue';
-```
-
----
-
-# Supported content types
+The project follows VidUp's public movie/TV path model.
 
 ## Movie
 
-A movie requires:
-
-- `type: 'movie'`
-- a TMDB movie ID
-
-Example:
-
-```ts
-{
-  type: 'movie',
-  id: 27205
-}
-```
-
-Generated path:
+Format:
 
 ```text
-https://player.vidplus.to/embed/movie/27205
+https://vidup.to/movie/{ID}
+```
+
+IMDb example:
+
+```text
+https://vidup.to/movie/tt0480249
+```
+
+TMDB example:
+
+```text
+https://vidup.to/movie/27205
+```
+
+With autoplay:
+
+```text
+https://vidup.to/movie/tt0480249?autoPlay=true
 ```
 
 ---
 
 ## TV
 
-A TV episode requires:
+Format:
 
-- `type: 'tv'`
-- a TMDB TV ID
+```text
+https://vidup.to/tv/{ID}/{SEASON}/{EPISODE}
+```
+
+Example:
+
+```text
+https://vidup.to/tv/1396/1/1
+```
+
+With options:
+
+```text
+https://vidup.to/tv/1396/1/1?autoPlay=true&autoNext=true&nextButton=true
+```
+
+TV requires both:
+
 - `season`
 - `episode`
 
-Example:
+---
 
-```ts
-{
-  type: 'tv',
-  id: 94997,
-  season: 1,
-  episode: 1
-}
-```
+# Supported IDs
 
-Generated path:
+VidUp movie and TV paths can be used with IMDb or TMDB identifiers.
+
+## IMDb
+
+IMDb IDs are strings such as:
 
 ```text
-https://player.vidplus.to/embed/tv/94997/1/1
+tt0480249
 ```
 
-The URL builder throws when season or episode is missing.
+Usage:
+
+```tsx
+<MoviePlayer
+  type="movie"
+  id="tt0480249"
+/>
+```
 
 ---
 
-## Anime
+## TMDB
 
-An anime episode requires:
-
-- `type: 'anime'`
-- an AniList ID
-- `episode`
-
-Example:
-
-```ts
-{
-  type: 'anime',
-  id: 21,
-  episode: 1
-}
-```
-
-Generated path:
+TMDB IDs are normally numeric:
 
 ```text
-https://player.vidplus.to/embed/anime/21/1
+27205
 ```
 
-Dub preference can also be supplied:
+Usage:
 
-```ts
-{
-  type: 'anime',
-  id: 21,
-  episode: 1,
-  dub: true
-}
+```tsx
+<MoviePlayer
+  type="movie"
+  id={27205}
+/>
 ```
+
+You can also pass a numeric ID as a string:
+
+```tsx
+<MoviePlayer
+  type="movie"
+  id="27205"
+/>
+```
+
+The library does not perform an IMDb-to-TMDB or TMDB-to-IMDb conversion.
+
+It passes the ID to VidUp.
 
 ---
 
 # Installation
 
-## From npm
-
-Once the package is published:
+## npm
 
 ```bash
 npm install vidplus-movie-player
 ```
 
-With pnpm:
+React application:
+
+```bash
+npm install vidplus-movie-player react react-dom
+```
+
+Vue application:
+
+```bash
+npm install vidplus-movie-player vue
+```
+
+---
+
+## pnpm
 
 ```bash
 pnpm add vidplus-movie-player
 ```
 
-With Yarn:
+---
+
+## Yarn
 
 ```bash
 yarn add vidplus-movie-player
 ```
 
+---
+
 ## Directly from GitHub
 
-During development or before the npm release:
+Before an npm release, or when testing the latest `main`:
 
 ```bash
 npm install github:migtam628/vidplus-movie-player
@@ -290,79 +342,101 @@ npm run build
 
 # Package entry points
 
-| Entry point | Purpose |
-|---|---|
-| `vidplus-movie-player` | Core URL helpers plus Vanilla creator |
-| `vidplus-movie-player/react` | React / Next.js MoviePlayer |
-| `vidplus-movie-player/vue` | Vue 3 MoviePlayer |
-| `vidplus-movie-player/vanilla` | Explicit Vanilla entry |
-
-## Root/core
+## Root
 
 ```ts
 import {
-  buildVidPlusUrl,
+  buildVidUpUrl,
   getIframeAttrs,
   createMoviePlayer,
 } from 'vidplus-movie-player';
 ```
 
-## React
+---
+
+## React / Next.js
 
 ```tsx
 import { MoviePlayer } from 'vidplus-movie-player/react';
 ```
 
-## Vue
+---
+
+## Vue 3
 
 ```ts
 import { MoviePlayer } from 'vidplus-movie-player/vue';
 ```
 
+---
+
 ## Vanilla
 
 ```ts
-import { createMoviePlayer } from 'vidplus-movie-player/vanilla';
+import {
+  createMoviePlayer,
+  buildVidUpUrl,
+} from 'vidplus-movie-player/vanilla';
 ```
 
 ---
 
 # Quick start
 
-## Movie
+## Movie with IMDb ID
+
+```tsx
+<MoviePlayer
+  type="movie"
+  id="tt0480249"
+  autoPlay
+/>
+```
+
+Generated URL:
+
+```text
+https://vidup.to/movie/tt0480249?autoPlay=true
+```
+
+---
+
+## Movie with TMDB ID
 
 ```tsx
 <MoviePlayer
   type="movie"
   id={27205}
-  primarycolor="00D4FF"
-  autoplay={false}
+  autoPlay={false}
+  theme="00D4FF"
 />
 ```
 
-## TV
+---
+
+## TV episode
 
 ```tsx
 <MoviePlayer
   type="tv"
-  id={94997}
+  id={1396}
   season={1}
   episode={1}
-  primarycolor="B20710"
-  secondarycolor="170000"
-  icons="netflix"
+  autoPlay
+  autoNext
+  nextButton
 />
 ```
 
-## Anime
+---
+
+## Resume at 2 minutes
 
 ```tsx
 <MoviePlayer
-  type="anime"
-  id={21}
-  episode={1}
-  dub
-  autoplay={false}
+  type="movie"
+  id="tt0480249"
+  startAt={120}
 />
 ```
 
@@ -370,104 +444,139 @@ import { createMoviePlayer } from 'vidplus-movie-player/vanilla';
 
 # React
 
-Install React if your application does not already include it:
-
-```bash
-npm install react react-dom
-```
-
-Use the React-specific entry point:
+Use the React subpath:
 
 ```tsx
 import { MoviePlayer } from 'vidplus-movie-player/react';
 
-export default function MoviePage() {
+export default function WatchMovie() {
   return (
     <main style={{ maxWidth: 1100, margin: '0 auto' }}>
       <MoviePlayer
         type="movie"
-        id={27205}
-        primarycolor="00D4FF"
-        iconcolor="FFFFFF"
-        autoplay={false}
-        titleAttr="Movie player"
+        id="tt0480249"
+        autoPlay={false}
+        theme="E50914"
+        sub="en"
+        chromecast={false}
+        poster
+        title
+        titleAttr="I Am Legend — VidUp player"
       />
     </main>
   );
 }
 ```
 
-The component renders:
+---
 
-1. A responsive wrapper `div`.
-2. An absolutely positioned iframe.
-3. A generated VidPlus URL.
-4. Recommended iframe attributes.
+## React TV example
 
-No CSS framework is required.
+```tsx
+import { MoviePlayer } from 'vidplus-movie-player/react';
 
-### Custom wrapper styling
+export default function WatchEpisode() {
+  return (
+    <MoviePlayer
+      type="tv"
+      id={1396}
+      season={1}
+      episode={1}
+      autoPlay={false}
+      autoNext
+      nextButton
+      theme="FFD60A"
+      sub="en"
+      titleAttr="TV episode — VidUp player"
+    />
+  );
+}
+```
+
+---
+
+## React custom styling
 
 ```tsx
 <MoviePlayer
   type="movie"
   id={27205}
-  className="cinema-player"
   aspectRatio="21/9"
+  className="my-player"
   style={{
-    borderRadius: 16,
-    overflow: 'hidden',
+    borderRadius: 18,
+    boxShadow: '0 24px 60px rgba(0, 0, 0, 0.35)',
   }}
 />
 ```
+
+`className`, `style`, and `aspectRatio` affect the local wrapper only.
+
+They are not sent to VidUp.
 
 ---
 
 # Next.js
 
-The React adapter can be used in Next.js.
+The React adapter works in Next.js.
 
 ```tsx
 import { MoviePlayer } from 'vidplus-movie-player/react';
 
 export default function WatchPage() {
   return (
-    <main style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
+    <main>
       <MoviePlayer
-        type="tv"
-        id={94997}
-        season={1}
-        episode={1}
-        autoplay={false}
-        primarycolor="FFD60A"
-        titleAttr="Episode player"
+        type="movie"
+        id="tt0480249"
+        autoPlay={false}
+        theme="E50914"
+        titleAttr="VidUp movie player"
       />
     </main>
   );
 }
 ```
 
-The component itself does not use React state, effects, localStorage, or browser event listeners.
+The component does not depend on React state or effects.
 
-Whether your page needs `'use client'` depends on the surrounding Next.js application and what else that component does.
+Whether your surrounding Next.js component needs `'use client'` depends on the rest of your application.
 
-A standalone example is included in:
+---
+
+## Next.js dynamic route example
+
+Suppose the page receives:
 
 ```text
-examples/nextjs-example.tsx
+/watch/movie/tt0480249
+```
+
+You can pass the route ID directly:
+
+```tsx
+<MoviePlayer
+  type="movie"
+  id={params.id}
+/>
+```
+
+For TV:
+
+```tsx
+<MoviePlayer
+  type="tv"
+  id={params.id}
+  season={Number(params.season)}
+  episode={Number(params.episode)}
+/>
 ```
 
 ---
 
 # Vue 3
 
-Install Vue:
-
-```bash
-npm install vue
-```
-
-Then:
+Use the Vue subpath:
 
 ```vue
 <script setup lang="ts">
@@ -477,47 +586,71 @@ import { MoviePlayer } from 'vidplus-movie-player/vue';
 <template>
   <MoviePlayer
     type="movie"
-    :id="27205"
-    primarycolor="00D4FF"
-    :autoplay="false"
-    title-attr="Movie player"
+    id="tt0480249"
+    :auto-play="false"
+    theme="E50914"
+    sub="en"
+    :chromecast="false"
+    title-attr="VidUp movie player"
   />
 </template>
 ```
 
-TV example:
+Vue templates normally use kebab-case for camelCase props:
+
+| TypeScript prop | Vue template |
+|---|---|
+| `autoPlay` | `auto-play` |
+| `autoNext` | `auto-next` |
+| `nextButton` | `next-button` |
+| `startAt` | `start-at` |
+| `allowFullScreen` | `allow-full-screen` |
+| `titleAttr` | `title-attr` |
+| `extraParams` | `extra-params` |
+
+---
+
+## Vue TV example
 
 ```vue
 <MoviePlayer
   type="tv"
-  :id="94997"
+  :id="1396"
   :season="1"
   :episode="1"
-  primarycolor="FFD60A"
-  icons="lucide"
-  :autoplay="false"
+  :auto-play="true"
+  :auto-next="true"
+  :next-button="true"
+  theme="00D4FF"
 />
 ```
 
-## Why optional Vue booleans are special
+---
 
-Vue normally casts an omitted Boolean prop to `false`.
+## Optional Vue booleans
 
-That behavior is undesirable for this package because an omitted option should usually remain omitted and allow VidPlus to apply its own upstream default.
+Vue normally turns an omitted Boolean prop into `false`.
 
-For example, this:
+That is not always what we want for upstream URL configuration.
+
+An omitted parameter should generally remain omitted, allowing VidUp to apply its own upstream default.
+
+The Vue adapter therefore sets optional Boolean parameters to `undefined` when omitted.
+
+This:
 
 ```vue
-<MoviePlayer type="movie" :id="27205" />
+<MoviePlayer
+  type="movie"
+  id="tt0480249"
+/>
 ```
 
-should not automatically become:
+does **not** automatically become:
 
 ```text
-...?autoplay=false&poster=false&chromecast=false...
+?autoPlay=false&chromecast=false&poster=false&title=false
 ```
-
-The Vue adapter therefore explicitly uses `default: undefined` for optional query-string booleans.
 
 ---
 
@@ -536,33 +669,29 @@ import { createMoviePlayer } from 'vidplus-movie-player/vanilla';
 
 const player = createMoviePlayer('#player', {
   type: 'movie',
-  id: 27205,
-  primarycolor: '6C63FF',
-  autoplay: false,
+  id: 'tt0480249',
+  autoPlay: false,
+  theme: 'E50914',
+  sub: 'en',
 });
 ```
 
-The returned instance contains:
+---
 
-```ts
-interface VanillaPlayerInstance {
-  element: HTMLDivElement;
-  iframe: HTMLIFrameElement;
-  update: (options: Partial<MoviePlayerOptions>) => void;
-  destroy: () => void;
-}
-```
-
-Update it:
+## Update an existing Vanilla player
 
 ```js
 player.update({
-  progress: 120,
-  primarycolor: '00D4FF',
+  startAt: 120,
+  theme: '00D4FF',
 });
 ```
 
-Remove it:
+This rebuilds the iframe URL.
+
+---
+
+## Destroy
 
 ```js
 player.destroy();
@@ -570,124 +699,194 @@ player.destroy();
 
 ---
 
-# CDN / browser global
+# Browser / CDN build
 
-The build generates:
+The build produces:
 
 ```text
 dist/vanilla.browser.js
 ```
 
-It exposes:
+The browser global is:
 
-```js
-VidPlusMoviePlayer
+```text
+VidUpMoviePlayer
 ```
 
-After an npm release, an unpkg-style example is:
+Example after a package release:
 
 ```html
 <div id="player"></div>
 
 <script src="https://unpkg.com/vidplus-movie-player@1.0.0/dist/vanilla.browser.js"></script>
 <script>
-  VidPlusMoviePlayer.createMoviePlayer('#player', {
+  VidUpMoviePlayer.createMoviePlayer('#player', {
     type: 'movie',
-    id: 27205,
-    primarycolor: '00D4FF',
-    autoplay: false
+    id: 'tt0480249',
+    autoPlay: false,
+    theme: 'E50914'
   });
 </script>
 ```
 
-Pin a package version in production rather than relying on a moving `latest` tag.
+For production, pin a specific package version.
+
+Do not rely on a moving `latest` URL if reproducibility matters.
 
 ---
 
 # HTML-only embed
 
-For a single static player, you may not need this package at all.
+You do not need this package for a one-off static iframe.
+
+Movie:
 
 ```html
 <div style="position:relative;width:100%;aspect-ratio:16/9;background:#000">
   <iframe
-    src="https://player.vidplus.to/embed/movie/27205?primarycolor=00D4FF&autoplay=true"
+    src="https://vidup.to/movie/tt0480249?autoPlay=true&theme=E50914"
     style="position:absolute;inset:0;width:100%;height:100%;border:0"
     allowfullscreen
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
     loading="lazy"
     referrerpolicy="strict-origin-when-cross-origin"
-    title="Movie player"
+    title="VidUp movie player"
   ></iframe>
 </div>
 ```
 
-The package is most useful when you need reusable configuration, typing, validation, multiple frameworks, or dynamic content.
+TV:
+
+```html
+<iframe
+  src="https://vidup.to/tv/1396/1/1?autoPlay=true&autoNext=true&nextButton=true"
+  allowfullscreen
+  title="VidUp TV player"
+></iframe>
+```
 
 ---
 
 # Core URL builder
 
-## `buildVidPlusUrl(options)`
+The preferred builder is:
 
 ```ts
-import { buildVidPlusUrl } from 'vidplus-movie-player';
+buildVidUpUrl()
+```
 
-const src = buildVidPlusUrl({
+Import:
+
+```ts
+import { buildVidUpUrl } from 'vidplus-movie-player';
+```
+
+Movie:
+
+```ts
+const url = buildVidUpUrl({
   type: 'movie',
-  id: 27205,
-  primarycolor: '00D4FF',
-  autoplay: false,
+  id: 'tt0480249',
+  autoPlay: true,
 });
 
-console.log(src);
+console.log(url);
 ```
 
 Result:
 
 ```text
-https://player.vidplus.to/embed/movie/27205?primarycolor=00D4FF&autoplay=false
-```
-
-## TV
-
-```ts
-const src = buildVidPlusUrl({
-  type: 'tv',
-  id: 94997,
-  season: 1,
-  episode: 1,
-});
-```
-
-## Anime
-
-```ts
-const src = buildVidPlusUrl({
-  type: 'anime',
-  id: 21,
-  episode: 1,
-  dub: true,
-});
+https://vidup.to/movie/tt0480249?autoPlay=true
 ```
 
 ---
 
-## `getIframeAttrs(options)`
+## TV URL builder
 
-The package also exposes the recommended iframe attribute object:
+```ts
+const url = buildVidUpUrl({
+  type: 'tv',
+  id: 1396,
+  season: 1,
+  episode: 1,
+  autoPlay: true,
+  autoNext: true,
+  nextButton: true,
+});
+```
+
+Result:
+
+```text
+https://vidup.to/tv/1396/1/1?autoPlay=true&autoNext=true&nextButton=true
+```
+
+---
+
+## Backward compatibility alias
+
+The original project exported:
+
+```ts
+buildVidPlusUrl()
+```
+
+For migration safety it still exists:
+
+```ts
+import { buildVidPlusUrl } from 'vidplus-movie-player';
+
+const url = buildVidPlusUrl({
+  type: 'movie',
+  id: 'tt0480249',
+});
+```
+
+However, it now returns a **VidUp URL**.
+
+It is deprecated.
+
+New code should use:
+
+```ts
+buildVidUpUrl()
+```
+
+---
+
+# API reference
+
+## `buildVidUpUrl(options)`
+
+Signature:
+
+```ts
+function buildVidUpUrl(options: MoviePlayerOptions): string
+```
+
+Purpose:
+
+- Validate content addressing.
+- Build the movie/TV path.
+- Serialize VidUp query parameters.
+- Preserve VidUp parameter casing.
+- Omit undefined values.
+- Encode path/query values.
+
+---
+
+## `getIframeAttrs(options)`
 
 ```ts
 import { getIframeAttrs } from 'vidplus-movie-player';
 
 const attrs = getIframeAttrs({
   type: 'movie',
-  id: 27205,
-  titleAttr: 'Inception player',
+  id: 'tt0480249',
 });
 ```
 
-It returns values corresponding to:
+Returns values for:
 
 - `allow`
 - `allowFullScreen`
@@ -695,198 +894,388 @@ It returns values corresponding to:
 - `referrerPolicy`
 - `title`
 
-This is useful when you want to render the iframe yourself while still using the package defaults.
+These configure the local iframe.
 
 ---
 
-# Complete option reference
+## `createMoviePlayer(container, options)`
 
-The following table describes the options modeled by this package. Upstream VidPlus behavior can change independently of this repository.
+Creates and mounts a VidUp iframe wrapper in the browser.
 
-## Content
+```js
+const player = createMoviePlayer('#player', {
+  type: 'movie',
+  id: 'tt0480249',
+});
+```
 
-| Option | Type | Required | Applies to | Description |
-|---|---|---:|---|---|
-| `type` | `'movie' \| 'tv' \| 'anime'` | Yes | All | Content mode |
-| `id` | `string \| number` | Yes | All | TMDB ID for movie/TV or AniList ID for anime |
-| `season` | `number` | TV | TV | Season number |
-| `episode` | `number` | TV/Anime | TV, Anime | Episode number |
-| `dub` | `boolean` | No | Anime | Dub preference |
+Returns:
+
+```ts
+interface VanillaPlayerInstance {
+  element: HTMLDivElement;
+  iframe: HTMLIFrameElement;
+  destroy(): void;
+  update(options: Partial<MoviePlayerOptions>): void;
+}
+```
+
+---
+
+# VidUp query parameters
+
+The library exposes a focused typed set of VidUp parameters and an `extraParams` escape hatch.
 
 ## Playback
 
-| Option | Type | Description |
-|---|---|---|
-| `autoplay` | `boolean` | Requests automatic playback |
-| `autonext` | `boolean` | Requests automatic next-episode behavior |
-| `nextbutton` | `boolean` | Controls next-episode button behavior |
-| `progress` | `number` | Requested start position in seconds |
+### `autoPlay`
 
-## Appearance
+Type:
 
-| Option | Type | Description |
-|---|---|---|
-| `primarycolor` | `string` | Primary player color; use hex without `#` |
-| `secondarycolor` | `string` | Secondary/progress color |
-| `iconcolor` | `string` | Icon color |
-| `poster` | `boolean` | Poster visibility |
-| `title` | `boolean` | Content title visibility |
-| `icons` | `'default' \| 'netflix' \| 'vid' \| 'lucide' \| 'tb'` | Icon set |
-| `font` | `string` | Font family |
-| `fontcolor` | `string` | Font/subtitle color |
-| `fontsize` | `number` | Font size |
-| `opacity` | `number` | Font/background opacity value |
-| `logourl` | `string` | Custom logo URL |
+```ts
+boolean
+```
 
 Example:
 
 ```tsx
 <MoviePlayer
   type="movie"
-  id={27205}
-  primarycolor="FACC15"
-  secondarycolor="111827"
-  iconcolor="FFFFFF"
-  icons="lucide"
-  font="Inter"
-  fontcolor="FFFFFF"
-  fontsize={18}
-  opacity={0.8}
+  id="tt0480249"
+  autoPlay
 />
 ```
 
-## Features
+URL:
 
-| Option | Type | Description |
-|---|---|---|
-| `chromecast` | `boolean` | Chromecast control preference |
-| `watchparty` | `boolean` | Watch-party feature preference |
-| `download` | `boolean` | Download feature preference |
-| `server` | `string \| number` | Preferred upstream server |
-| `servericon` | `boolean` | Server-selection icon preference |
-| `setting` | `boolean` | Settings control preference |
-| `pip` | `boolean` | Picture-in-picture preference |
-| `episodelist` | `boolean` | Episode-list preference |
+```text
+?autoPlay=true
+```
 
-## Hide/control options
+Case matters.
 
-All of these are optional booleans:
+The package does not rewrite this to `autoplay`.
 
-- `hideprimarycolor`
-- `hidesecondarycolor`
-- `hideiconcolor`
-- `hideprogresscontrol`
-- `hideiconset`
-- `hideautonext`
-- `hideautoplay`
-- `hidenextbutton`
-- `hideposter`
-- `hidetitle`
-- `hidechromecast`
-- `hideepisodelist`
-- `hideservericon`
-- `hidepip`
+---
+
+### `autoNext`
+
+Type:
+
+```ts
+boolean
+```
+
+Most relevant for TV.
+
+```tsx
+<MoviePlayer
+  type="tv"
+  id={1396}
+  season={1}
+  episode={1}
+  autoNext
+/>
+```
+
+---
+
+### `nextButton`
+
+Type:
+
+```ts
+boolean
+```
+
+Example:
+
+```tsx
+<MoviePlayer
+  type="tv"
+  id={1396}
+  season={1}
+  episode={1}
+  nextButton={false}
+/>
+```
+
+---
+
+### `startAt`
+
+Type:
+
+```ts
+number
+```
+
+Value is intended as a playback position in seconds.
 
 Example:
 
 ```tsx
 <MoviePlayer
   type="movie"
-  id={27205}
-  hideautoplay
-  hidechromecast
-  hidepip
+  id="tt0480249"
+  startAt={300}
 />
 ```
 
-## Layout and iframe options
+URL:
 
-These options affect the local wrapper or iframe and are **not** added to the VidPlus query string.
+```text
+?startAt=300
+```
+
+---
+
+# Player appearance/options
+
+## `theme`
+
+Type:
+
+```ts
+string
+```
+
+Typical usage:
+
+```tsx
+<MoviePlayer
+  type="movie"
+  id="tt0480249"
+  theme="E50914"
+/>
+```
+
+Use the format expected by VidUp.
+
+Common integrations use a hex color without the leading `#`.
+
+---
+
+## `poster`
+
+Type:
+
+```ts
+boolean
+```
+
+Example:
+
+```tsx
+<MoviePlayer
+  type="movie"
+  id="tt0480249"
+  poster
+/>
+```
+
+---
+
+## `title`
+
+Type:
+
+```ts
+boolean
+```
+
+Example:
+
+```tsx
+<MoviePlayer
+  type="movie"
+  id="tt0480249"
+  title={false}
+/>
+```
+
+---
+
+## `chromecast`
+
+Type:
+
+```ts
+boolean
+```
+
+Example:
+
+```tsx
+<MoviePlayer
+  type="movie"
+  id="tt0480249"
+  chromecast={false}
+/>
+```
+
+---
+
+# Subtitle / language options
+
+## `sub`
+
+Type:
+
+```ts
+string
+```
+
+Example:
+
+```tsx
+<MoviePlayer
+  type="movie"
+  id="tt0480249"
+  sub="en"
+/>
+```
+
+---
+
+## `lang`
+
+Type:
+
+```ts
+string
+```
+
+Example:
+
+```ts
+{
+  lang: 'en'
+}
+```
+
+The exact upstream effect can depend on VidUp's current player behavior.
+
+---
+
+# Extra parameters
+
+VidUp may add or change player options faster than this package releases.
+
+Use:
+
+```ts
+extraParams
+```
+
+for parameters that are not yet first-class typed properties.
+
+Example:
+
+```tsx
+<MoviePlayer
+  type="movie"
+  id="tt0480249"
+  extraParams={{
+    someFutureOption: true,
+    anotherOption: 'value',
+  }}
+/>
+```
+
+Generated query keys are preserved exactly.
+
+The package does **not** lowercase `extraParams` keys.
+
+That matters because VidUp's public parameters include mixed-case names.
+
+---
+
+# Local-only options
+
+These do not become VidUp query parameters.
 
 | Option | Type | Default | Purpose |
 |---|---|---|---|
 | `className` | `string` | `''` | Wrapper class |
-| `style` | `Record<string, string \| number>` | `{}` | Wrapper inline style |
+| `style` | `Record<string, string \| number>` | `{}` | Wrapper style |
 | `aspectRatio` | `string` | `'16/9'` | CSS aspect ratio |
 | `allowFullScreen` | `boolean` | `true` | Fullscreen permission |
-| `titleAttr` | `string` | `'VidPlus Player'` | Accessible iframe title |
-| `loading` | `'lazy' \| 'eager'` | `'lazy'` | Iframe loading strategy |
+| `titleAttr` | `string` | `'VidUp Player'` | Accessible iframe title |
+| `loading` | `'lazy' \| 'eager'` | `'lazy'` | Loading mode |
 
 ---
 
-# URL behavior
-
-The URL builder follows a few deliberate rules.
+# URL serialization rules
 
 ## Undefined values are omitted
 
 ```ts
-buildVidPlusUrl({
+buildVidUpUrl({
   type: 'movie',
-  id: 27205,
-  autoplay: undefined,
+  id: 'tt0480249',
+  autoPlay: undefined,
 });
 ```
 
-does not append `autoplay`.
-
-## Null values are omitted
-
-The serializer also ignores `null` at runtime.
-
-## Booleans are explicit
-
-```ts
-autoplay: true
-```
-
-becomes:
-
-```text
-autoplay=true
-```
-
-and:
-
-```ts
-autoplay: false
-```
-
-becomes:
-
-```text
-autoplay=false
-```
-
-## Layout keys never leak upstream
-
-These are intentionally excluded from the query string:
-
-- `className`
-- `style`
-- `aspectRatio`
-- `allowFullScreen`
-- `titleAttr`
-- `loading`
-
-## Parameter names are lowercase
-
-Package option keys are serialized to lowercase, matching the URL parameter naming used by the integration.
-
-## Upstream defaults are not hard-coded
-
-If you do not provide an optional player query value, this package generally leaves it out.
-
-That keeps this wrapper from unnecessarily overriding VidPlus behavior and reduces coupling to upstream defaults that may change.
+does not add `autoPlay`.
 
 ---
 
-# Responsive layout and styling
+## Boolean values are explicit
 
-The default wrapper is equivalent to:
+```ts
+autoPlay: true
+```
+
+becomes:
+
+```text
+autoPlay=true
+```
+
+```ts
+autoPlay: false
+```
+
+becomes:
+
+```text
+autoPlay=false
+```
+
+---
+
+## VidUp casing is preserved
+
+This is correct:
+
+```text
+autoPlay
+autoNext
+nextButton
+startAt
+```
+
+The library intentionally does **not** transform those into:
+
+```text
+autoplay
+autonext
+nextbutton
+startat
+```
+
+That behavior is one of the major differences from the original VidPlus implementation.
+
+---
+
+# Responsive layout
+
+Default wrapper behavior:
 
 ```css
-.vidplus-movie-player {
+.vidup-movie-player {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -894,7 +1283,7 @@ The default wrapper is equivalent to:
   background: #000;
 }
 
-.vidplus-movie-player iframe {
+.vidup-movie-player iframe {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -903,71 +1292,75 @@ The default wrapper is equivalent to:
 }
 ```
 
-Change the ratio:
+---
+
+## Cinematic ratio
 
 ```tsx
 <MoviePlayer
   type="movie"
-  id={27205}
+  id="tt0480249"
   aspectRatio="21/9"
 />
 ```
 
-Square:
+---
+
+## 4:3
 
 ```tsx
 <MoviePlayer
   type="movie"
-  id={27205}
-  aspectRatio="1/1"
+  id="tt0480249"
+  aspectRatio="4/3"
 />
-```
-
-With Tailwind around the component:
-
-```tsx
-<div className="mx-auto max-w-6xl overflow-hidden rounded-2xl shadow-2xl">
-  <MoviePlayer type="movie" id={27205} />
-</div>
 ```
 
 ---
 
 # Vanilla lifecycle API
 
-`createMoviePlayer()` returns a stable object so a non-framework application can control the player.
+## Create
 
 ```js
 const player = createMoviePlayer('#player', {
-  type: 'tv',
-  id: 94997,
-  season: 1,
-  episode: 1,
+  type: 'movie',
+  id: 'tt0480249',
 });
 ```
 
-## Access the wrapper
+## Wrapper element
 
 ```js
 player.element
 ```
 
-## Access the iframe
+## Iframe
 
 ```js
 player.iframe
 ```
 
-## Update configuration
+## Update
 
 ```js
 player.update({
-  episode: 2,
-  progress: 0,
+  startAt: 120,
+  theme: '00D4FF',
 });
 ```
 
-The URL is rebuilt after an update.
+## Move to another TV episode
+
+```js
+player.update({
+  type: 'tv',
+  id: 1396,
+  season: 1,
+  episode: 2,
+  autoNext: true,
+});
+```
 
 ## Destroy
 
@@ -975,13 +1368,147 @@ The URL is rebuilt after an update.
 player.destroy();
 ```
 
-This removes the wrapper from the DOM.
+---
+
+# Migration from VidPlus
+
+The original implementation used VidPlus-specific URLs and options.
+
+This version is intentionally different.
+
+## Base URL
+
+Old:
+
+```text
+https://player.vidplus.to/embed
+```
+
+New:
+
+```text
+https://vidup.to
+```
+
+---
+
+## Movie
+
+Old:
+
+```text
+https://player.vidplus.to/embed/movie/27205
+```
+
+New:
+
+```text
+https://vidup.to/movie/27205
+```
+
+or:
+
+```text
+https://vidup.to/movie/tt0480249
+```
+
+---
+
+## TV
+
+Old:
+
+```text
+https://player.vidplus.to/embed/tv/94997/1/1
+```
+
+New:
+
+```text
+https://vidup.to/tv/94997/1/1
+```
+
+---
+
+## Parameter migration
+
+| Old VidPlus property | VidUp property |
+|---|---|
+| `autoplay` | `autoPlay` |
+| `autonext` | `autoNext` |
+| `nextbutton` | `nextButton` |
+| `progress` | `startAt` |
+| `primarycolor` | use VidUp `theme` where appropriate |
+| `poster` | `poster` |
+| `title` | `title` |
+| `chromecast` | `chromecast` |
+
+VidPlus-only fields were removed from the typed API.
+
+---
+
+## Removed first-class options
+
+The VidPlus version exposed options such as:
+
+- `secondarycolor`
+- `iconcolor`
+- `icons`
+- `font`
+- `fontcolor`
+- `fontsize`
+- `opacity`
+- `logourl`
+- `watchparty`
+- `download`
+- `server`
+- `servericon`
+- `setting`
+- `pip`
+- `episodelist`
+- many `hide...` properties
+
+They are no longer first-class VidUp options in this package.
+
+If VidUp documents a parameter that is not yet typed, use `extraParams`.
+
+---
+
+## Anime
+
+The original VidPlus wrapper modeled an anime/AniList route.
+
+The VidUp-focused API in this repository currently exposes:
+
+```ts
+type ContentType = 'movie' | 'tv';
+```
+
+Anime is not included as a first-class route.
+
+Do not assume the old VidPlus anime path exists on VidUp.
+
+---
+
+## Builder migration
+
+Old code:
+
+```ts
+import { buildVidPlusUrl } from 'vidplus-movie-player';
+```
+
+Preferred new code:
+
+```ts
+import { buildVidUpUrl } from 'vidplus-movie-player';
+```
+
+The old function remains as a deprecated alias temporarily.
 
 ---
 
 # Error handling
-
-The core throws descriptive errors for invalid content addressing.
 
 ## Missing type or ID
 
@@ -989,26 +1516,33 @@ The core throws descriptive errors for invalid content addressing.
 [vidplus-movie-player] "type" and "id" are required
 ```
 
+---
+
 ## Missing TV season or episode
 
 ```text
 [vidplus-movie-player] "season" and "episode" are required for type "tv"
 ```
 
-## Missing anime episode
-
-```text
-[vidplus-movie-player] "episode" is required for type "anime"
-```
+---
 
 ## Unknown type
 
-The TypeScript type system should prevent this in typed code, and runtime validation protects JavaScript callers.
+Only:
 
-## Missing Vanilla target
+```text
+movie
+tv
+```
+
+are accepted by the current typed API.
+
+---
+
+## Missing Vanilla container
 
 ```js
-createMoviePlayer('#does-not-exist', options);
+createMoviePlayer('#not-found', options);
 ```
 
 throws a container-not-found error.
@@ -1017,71 +1551,102 @@ throws a container-not-found error.
 
 # TypeScript
 
-The package is authored in TypeScript and generates declarations for all public entry points.
-
-Core types:
+Types:
 
 ```ts
 import type {
   ContentType,
-  IconStyle,
+  MediaId,
+  ExtraVidUpParams,
   MoviePlayerOptions,
   MoviePlayerProps,
+  VanillaPlayerInstance,
 } from 'vidplus-movie-player';
 ```
 
-Vanilla instance:
+---
+
+## ContentType
 
 ```ts
-import type { VanillaPlayerInstance } from 'vidplus-movie-player';
+type ContentType = 'movie' | 'tv';
 ```
 
-Example reusable configuration:
+---
+
+## MediaId
 
 ```ts
-import type { MoviePlayerOptions } from 'vidplus-movie-player';
+type MediaId = string | number;
+```
 
-const movieOptions: MoviePlayerOptions = {
+Examples:
+
+```ts
+const imdb: MediaId = 'tt0480249';
+const tmdb: MediaId = 27205;
+```
+
+---
+
+## MoviePlayerOptions
+
+Example:
+
+```ts
+const options: MoviePlayerOptions = {
   type: 'movie',
-  id: 27205,
-  primarycolor: '00D4FF',
-  autoplay: false,
+  id: 'tt0480249',
+  autoPlay: false,
+  startAt: 60,
+  theme: 'E50914',
+  sub: 'en',
+  chromecast: false,
 };
 ```
 
 ---
 
-# SSR and hydration
+# SSR and Next.js
 
-The core URL builder is deterministic and does not require the DOM.
+`buildVidUpUrl()` does not access `window` or `document`.
 
-That makes this safe in server code:
+It can be called during server rendering.
+
+Example:
 
 ```ts
-const src = buildVidPlusUrl({
+const src = buildVidUpUrl({
   type: 'movie',
-  id: 27205,
+  id: 'tt0480249',
 });
 ```
 
-The Vanilla DOM adapter requires `document`, so call it only in a browser context.
+The Vanilla adapter does access `document`.
 
-React/Next.js and Vue SSR behavior depends on how your application renders third-party iframes and what framework boundary you place around the component.
+Therefore:
 
-For hydration stability:
+```ts
+createMoviePlayer()
+```
 
-- Keep initial options deterministic.
-- Do not generate different IDs on server and client.
-- Avoid reading browser-only state during server render.
-- Move browser-specific logic to the appropriate client lifecycle when necessary.
+must run in a browser.
 
 ---
 
 # Security
 
-This package renders a third-party iframe. Treat the upstream origin as a separate trust boundary.
+VidUp is embedded as a third-party iframe.
 
-The default iframe policy is:
+Treat:
+
+```text
+https://vidup.to
+```
+
+as an external trust boundary.
+
+The default iframe permissions are:
 
 ```text
 accelerometer;
@@ -1093,7 +1658,7 @@ picture-in-picture;
 web-share
 ```
 
-Fullscreen is enabled unless explicitly disabled.
+Fullscreen is enabled by default.
 
 The default referrer policy is:
 
@@ -1101,86 +1666,80 @@ The default referrer policy is:
 strict-origin-when-cross-origin
 ```
 
-## Custom logo URLs
+---
 
-If `logourl` is user-controlled, validate or restrict it before passing it into the player configuration.
+## User-controlled extraParams
 
-## IDs and query values
+Do not blindly pass arbitrary user input into `extraParams`.
 
-The package uses `URLSearchParams` for query serialization, avoiding manual query-string concatenation.
+Although `URLSearchParams` safely serializes values into the query string, application-level policy still matters.
 
-## Iframe sandboxing
+Whitelist options when appropriate.
 
-The package does not set a `sandbox` attribute by default because overly restrictive sandbox policies can break player functionality.
+---
 
-If your application requires sandboxing, use `buildVidPlusUrl()` and render a custom iframe with the exact policy your threat model requires.
+## No direct-stream resolving
+
+This project intentionally does not resolve VidUp's internal media servers or decrypt direct stream URLs.
+
+It only builds the public embed URL and renders it.
 
 ---
 
 # Content Security Policy
 
-Applications with a restrictive CSP may need to allow the player origin.
-
-A deployment may require a directive similar to:
+If your site uses a strict CSP, you may need:
 
 ```text
-frame-src https://player.vidplus.to;
+frame-src https://vidup.to;
 ```
 
-or an equivalent `child-src` policy for older CSP setups.
+Depending on your CSP version/setup you may also need an appropriate `child-src` fallback.
 
-Do not blindly copy a CSP example into production. Merge it with your existing policy and only permit the origins your application actually requires.
+Do not replace your existing CSP with this one line.
 
-If a custom logo or other upstream resource uses additional origins, browser console CSP violations will identify what was blocked.
+Merge VidUp into your existing policy intentionally.
 
 ---
 
 # Privacy
 
-Loading a third-party iframe can allow the iframe provider and its infrastructure to receive information such as:
+A third-party iframe can expose request/context information to the external service, including potentially:
 
 - IP address
 - browser/user-agent information
-- request timing
-- referrer data subject to browser/referrer policy
-- cookies or storage associated with the third-party origin
-- player interactions controlled by the upstream service
+- timing information
+- cookies/storage associated with the external origin
+- referrer data as permitted by browser policy
+- player interaction data controlled by the provider
 
-If your deployment has consent or privacy requirements, review the upstream service's current behavior and your applicable legal obligations.
+Review VidUp's current privacy/terms behavior for your deployment.
 
-This repository does not proxy those requests.
+This package does not proxy or anonymize the iframe.
 
 ---
 
 # Accessibility
 
-Every iframe should have a meaningful title.
+The iframe receives a title.
 
 Default:
 
 ```text
-VidPlus Player
+VidUp Player
 ```
 
-Better for a specific page:
+Prefer a content-specific title:
 
 ```tsx
 <MoviePlayer
   type="movie"
-  id={27205}
-  titleAttr="Inception video player"
+  id="tt0480249"
+  titleAttr="I Am Legend video player"
 />
 ```
 
-Other accessibility considerations remain the responsibility of the upstream player and the application embedding it, including:
-
-- keyboard navigation
-- focus indication
-- captions/subtitles
-- audio description
-- control labels
-- contrast
-- screen-reader behavior
+The wrapper cannot independently guarantee accessibility of controls rendered inside the third-party iframe.
 
 ---
 
@@ -1188,101 +1747,97 @@ Other accessibility considerations remain the responsibility of the upstream pla
 
 ## Lazy loading
 
-The default is:
+Default:
 
 ```ts
 loading: 'lazy'
 ```
 
-This can reduce initial page work when the player is below the fold.
-
-To request eager loading:
+Override:
 
 ```tsx
 <MoviePlayer
   type="movie"
-  id={27205}
+  id="tt0480249"
   loading="eager"
 />
 ```
 
-## Avoid unnecessary remounts
+---
 
-In React or Vue, keep stable props where possible.
+## Keep options stable
 
-In Vanilla, prefer:
+Changing a VidUp URL can cause the iframe to reload.
 
-```js
-player.update(...)
-```
+In React/Vue, avoid needlessly changing player props.
 
-instead of destroying and recreating the DOM node for every small option change.
-
-## Third-party performance
-
-The wrapper is small. Most network and playback cost comes from the embedded upstream player, not this package.
+In Vanilla, call `update()` only when the player URL or local wrapper configuration actually needs to change.
 
 ---
 
 # Troubleshooting
 
-## Player area is blank
+## I still see player.vidplus.to
 
-Check:
+You are probably using an older build or older copied source.
 
-1. The generated iframe URL.
-2. Browser developer console.
-3. Network errors.
-4. CSP `frame-src`.
-5. Browser privacy extensions.
-6. DNS/filtering software.
-7. Whether the upstream service is available.
-8. Whether the requested content/server is available upstream.
-
-The wrapper cannot repair an unavailable upstream stream.
-
----
-
-## Autoplay does not start
-
-Browser autoplay policies can block automatic playback, especially with sound.
+Current core constant:
 
 ```ts
-autoplay: true
+VIDUP_BASE_URL = 'https://vidup.to'
 ```
 
-requests autoplay from the player. It does not override Chrome, Safari, Firefox, mobile OS, or user autoplay restrictions.
+Current generated movie URL should begin:
+
+```text
+https://vidup.to/movie/
+```
 
 ---
 
-## Color does not apply
+## My old autoplay prop stopped working
 
-Use the color value without `#`:
+Old:
 
-Correct:
-
-```text
-00D4FF
+```tsx
+autoplay
 ```
 
-Instead of:
+New:
 
-```text
-#00D4FF
+```tsx
+autoPlay
 ```
 
-Actual upstream support for a parameter may change over time.
+VidUp parameter casing is preserved.
 
 ---
 
-## TV throws a missing season/episode error
+## autoPlay=true does not actually autoplay
 
-Supply both:
+Browser autoplay policy can still block playback.
+
+The query parameter requests autoplay from VidUp.
+
+It cannot override Chrome, Safari, Firefox, iOS, Android, or user browser settings.
+
+---
+
+## TV throws an error
+
+TV needs:
+
+```ts
+season
+episode
+```
+
+Example:
 
 ```tsx
 <MoviePlayer
   type="tv"
-  id={94997}
+  id={1396}
   season={1}
   episode={1}
 />
@@ -1290,75 +1845,69 @@ Supply both:
 
 ---
 
-## Anime throws a missing episode error
+## IMDb ID does not load
 
-Supply:
+Verify the ID format.
 
-```tsx
-<MoviePlayer
-  type="anime"
-  id={21}
-  episode={1}
-/>
-```
-
----
-
-## React is requested in a Vanilla project
-
-Use the root or Vanilla entry:
-
-```ts
-import { createMoviePlayer } from 'vidplus-movie-player';
-```
-
-or:
-
-```ts
-import { createMoviePlayer } from 'vidplus-movie-player/vanilla';
-```
-
-Do not import the React subpath.
-
----
-
-## Vue is requested in a non-Vue project
-
-Do not import:
+Typical IMDb title ID:
 
 ```text
-vidplus-movie-player/vue
+tt0480249
 ```
 
-The root package does not depend on Vue at runtime.
+The package does not verify that the ID exists.
 
 ---
 
-## Vue omitted booleans show up as false
+## TMDB ID does not load
 
-The initial public source addresses this by using `default: undefined` for optional Boolean player-query props.
-
-If you encounter this behavior, verify that you are using a release that includes the fixed Vue adapter.
+The package can build a valid URL with a numeric TMDB ID, but content availability is controlled upstream.
 
 ---
 
-## CDN global is missing
+## Theme does not apply
 
-Check that the browser bundle actually loaded before accessing:
+Use the value format expected by VidUp.
+
+A common form is:
+
+```text
+E50914
+```
+
+rather than:
+
+```text
+#E50914
+```
+
+---
+
+## CSP blocks the iframe
+
+Look for a console error mentioning:
+
+```text
+frame-src
+```
+
+Allow the VidUp origin in the relevant CSP directive.
+
+---
+
+## CDN global is undefined
+
+The global is now:
+
+```js
+VidUpMoviePlayer
+```
+
+not:
 
 ```js
 VidPlusMoviePlayer
 ```
-
-Pin a valid published version and inspect the browser Network tab for 404s.
-
----
-
-## Node treats ESM incorrectly
-
-This project uses explicit `.mjs` ESM outputs and `.cjs` CommonJS outputs.
-
-That avoids relying on ambiguous `.js` module interpretation.
 
 ---
 
@@ -1373,16 +1922,13 @@ vidplus-movie-player/
 │   ├── workflows/
 │   │   └── ci.yml
 │   └── pull_request_template.md
-│
 ├── examples/
 │   ├── nextjs-example.tsx
 │   ├── react-example.tsx
 │   ├── vanilla.html
 │   └── vue-example.vue
-│
 ├── scripts/
 │   └── build.js
-│
 ├── src/
 │   ├── core.ts
 │   ├── index.ts
@@ -1390,7 +1936,6 @@ vidplus-movie-player/
 │   ├── types.ts
 │   ├── vanilla.ts
 │   └── vue.ts
-│
 ├── .gitignore
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
@@ -1400,27 +1945,6 @@ vidplus-movie-player/
 ├── package.json
 └── tsconfig.json
 ```
-
-Generated build output is intentionally ignored by Git:
-
-```text
-dist/
-├── index.mjs
-├── index.cjs
-├── index.d.ts
-├── react.mjs
-├── react.cjs
-├── react.d.ts
-├── vue.mjs
-├── vue.cjs
-├── vue.d.ts
-├── vanilla.mjs
-├── vanilla.cjs
-├── vanilla.d.ts
-└── vanilla.browser.js
-```
-
-Source maps and declaration maps may also be generated.
 
 ---
 
@@ -1451,13 +1975,13 @@ Build:
 npm run build
 ```
 
-Inspect the npm package contents without publishing:
+Inspect the npm package:
 
 ```bash
 npm run pack:check
 ```
 
-Clean generated output:
+Clean:
 
 ```bash
 npm run clean
@@ -1467,12 +1991,12 @@ npm run clean
 
 # Build system
 
-The build uses:
+Build tooling:
 
-- TypeScript for types/declarations.
-- esbuild for JavaScript bundles.
+- TypeScript
+- esbuild
 
-Public logical entry points:
+Entries:
 
 ```text
 src/index.ts
@@ -1481,50 +2005,47 @@ src/vue.ts
 src/vanilla.ts
 ```
 
-Each is bundled to ESM and CommonJS.
-
-Example:
+Outputs include:
 
 ```text
-src/react.tsx
-  -> dist/react.mjs
-  -> dist/react.cjs
-  -> dist/react.d.ts
-```
+dist/index.mjs
+dist/index.cjs
+dist/index.d.ts
 
-The Vanilla adapter also generates:
+dist/react.mjs
+dist/react.cjs
+dist/react.d.ts
 
-```text
+dist/vue.mjs
+dist/vue.cjs
+dist/vue.d.ts
+
+dist/vanilla.mjs
+dist/vanilla.cjs
+dist/vanilla.d.ts
+
 dist/vanilla.browser.js
 ```
 
-using the global:
+---
+
+## Browser global
 
 ```text
-VidPlusMoviePlayer
+VidUpMoviePlayer
 ```
-
-## Why `.mjs`?
-
-The package intentionally uses `.mjs` for ESM instead of depending on `"type": "module"` for the entire package.
-
-That keeps:
-
-- Node ESM detection explicit.
-- CJS output explicit.
-- the CommonJS build script simple.
 
 ---
 
 # CI
 
-GitHub Actions runs verification on:
+GitHub Actions verifies the project on:
 
 - Node.js 18
 - Node.js 20
 - Node.js 22
 
-For each version it performs:
+The CI workflow runs:
 
 ```bash
 npm install --ignore-scripts
@@ -1533,7 +2054,7 @@ npm run build
 npm run pack:check
 ```
 
-The workflow runs for pushes to `main` and pull requests targeting `main`.
+for pushes and pull requests targeting `main`.
 
 ---
 
@@ -1555,122 +2076,184 @@ npm login
 npm publish
 ```
 
-The package defines:
+The package includes:
 
 ```json
 "prepublishOnly": "npm run typecheck && npm run build"
 ```
 
-so a publish performs a fresh verification/build.
+so publication triggers a fresh validation/build.
 
-Before the first public release, verify:
+---
 
-- npm package name availability.
-- package version.
-- repository URLs.
-- README examples.
-- expected `dist/` outputs.
-- no credentials or private data in the packed files.
-- current upstream VidPlus parameter behavior.
+# Package naming
+
+The current package/repository is:
+
+```text
+vidplus-movie-player
+```
+
+The implementation is now VidUp-based.
+
+This name is retained in the current repository to avoid changing GitHub paths and breaking code that already references the project.
+
+A future major release could rename the npm package/repository to something like:
+
+```text
+vidup-movie-player
+```
+
+if desired.
+
+That would be a packaging/repository migration, separate from the runtime-provider migration already completed here.
 
 ---
 
 # Versioning
 
-The project is intended to follow Semantic Versioning:
+The project follows Semantic Versioning where practical:
 
 ```text
 MAJOR.MINOR.PATCH
 ```
 
-Examples:
+Changes to an unaffiliated upstream provider can also require compatibility releases.
 
-- `1.0.1`: backward-compatible bug fix.
-- `1.1.0`: backward-compatible new option or adapter.
-- `2.0.0`: intentional public API break.
+See:
 
-Because this package wraps an unaffiliated third-party player, an upstream service change can require a compatibility release even when this repository itself did not introduce the original break.
-
-See [CHANGELOG.md](CHANGELOG.md).
+[CHANGELOG.md](CHANGELOG.md)
 
 ---
 
 # Roadmap
 
-Possible future work:
+Potential improvements:
 
-- Unit tests for URL construction.
-- Runtime validation helpers.
-- Color-format validation.
-- Progress/opacity range validation.
-- Dedicated Vite examples.
+- Unit tests for every URL combination.
+- Explicit test fixtures for IMDb IDs.
+- Explicit test fixtures for TMDB IDs.
+- URL snapshot tests.
+- Validation for negative season/episode numbers.
+- Theme/color validation.
+- Subtitle/language enums if VidUp publishes stable values.
+- Additional typed VidUp parameters as documentation evolves.
+- Dedicated Vite React example.
+- Dedicated Vite Vue example.
 - Full Next.js App Router demo.
-- Full Vue/Vite demo.
 - Svelte adapter.
 - Solid adapter.
 - Web Component adapter.
-- Theme presets.
-- Custom iframe permission configuration.
-- Optional iframe sandbox presets.
-- Automated npm releases.
+- npm release automation.
 - npm provenance.
-- GitHub release workflow.
-- Dependency update automation.
-- API extraction/document generation.
-- Event helpers if VidPlus exposes a documented cross-window messaging API.
-
-Roadmap items are ideas, not guarantees.
+- GitHub Release automation.
+- Dependabot/Renovate.
+- API documentation generation.
+- Optional custom iframe permission configuration.
+- Optional sandbox presets.
 
 ---
 
 # FAQ
 
-## Does this repository host movies or TV episodes?
+## Is this using VidPlus?
 
 No.
 
-It builds embed URLs and renders an iframe.
+The runtime provider is:
 
-## Does it download media?
+```text
+https://vidup.to
+```
 
-No media downloading is implemented by this wrapper.
+The old VidPlus base URL has been removed from the runtime implementation.
 
-## Does it fetch TMDB metadata?
+---
+
+## Why does the repo name still say vidplus?
+
+Compatibility.
+
+The repository was created under that name before the provider migration.
+
+The package can be renamed separately later.
+
+---
+
+## What is the official upstream documentation?
+
+Use:
+
+https://vidup.to/#documentation
+
+That should be treated as the primary upstream reference when changing VidUp URL formats and parameters.
+
+---
+
+## Does it support IMDb IDs?
+
+Yes.
+
+Example:
+
+```tsx
+<MoviePlayer
+  type="movie"
+  id="tt0480249"
+/>
+```
+
+---
+
+## Does it support TMDB IDs?
+
+Yes.
+
+Example:
+
+```tsx
+<MoviePlayer
+  type="movie"
+  id={27205}
+/>
+```
+
+---
+
+## Does it support anime?
+
+Not as a first-class content path in the current VidUp-oriented API.
+
+The old VidPlus AniList/anime route was intentionally removed.
+
+---
+
+## Does it fetch metadata?
 
 No.
 
-Your application is responsible for metadata and for supplying the correct TMDB ID.
+---
 
-## Does it fetch AniList metadata?
-
-No.
-
-Supply the relevant AniList ID yourself.
-
-## Do I need a backend?
-
-Not for basic URL construction or iframe rendering.
-
-## Do I need React?
+## Does it provide direct m3u8 URLs?
 
 No.
 
-React is only needed for the `/react` adapter.
+---
 
-## Do I need Vue?
+## Does it proxy streams?
 
 No.
 
-Vue is only needed for the `/vue` adapter.
+---
 
-## Can I build my own component?
+## Can I render my own iframe?
 
 Yes.
 
 Use:
 
 ```ts
-buildVidPlusUrl()
+buildVidUpUrl()
 ```
 
 and optionally:
@@ -1679,38 +2262,54 @@ and optionally:
 getIframeAttrs()
 ```
 
-then render your own iframe.
+---
 
-## Can I change the aspect ratio?
+## Can I use a parameter that is not typed yet?
 
-Yes:
+Yes.
 
-```tsx
-<MoviePlayer
-  type="movie"
-  id={27205}
-  aspectRatio="21/9"
-/>
+Use:
+
+```ts
+extraParams
 ```
+
+---
+
+## Does buildVidPlusUrl still work?
+
+Yes, temporarily.
+
+It is a deprecated alias for:
+
+```ts
+buildVidUpUrl
+```
+
+and now generates VidUp URLs.
+
+---
 
 ## Can I disable fullscreen?
 
-Yes:
+Yes.
 
 ```tsx
 <MoviePlayer
   type="movie"
-  id={27205}
+  id="tt0480249"
   allowFullScreen={false}
 />
 ```
 
-## Can I start at a specific playback position?
+---
 
-The package exposes:
+## Can I resume playback?
 
-```ts
-progress?: number
+Use:
+
+```tsx
+startAt={seconds}
 ```
 
 Example:
@@ -1718,84 +2317,60 @@ Example:
 ```tsx
 <MoviePlayer
   type="movie"
-  id={27205}
-  progress={120}
+  id="tt0480249"
+  startAt={600}
 />
 ```
-
-Actual playback behavior remains controlled by the upstream player.
-
-## Can I choose a server?
-
-The wrapper exposes:
-
-```ts
-server?: string | number
-```
-
-The accepted server values and availability are controlled upstream.
-
-## Why does the package omit unspecified options?
-
-To avoid overriding upstream defaults unnecessarily.
-
-## Can it guarantee content availability?
-
-No.
-
-## Can it bypass autoplay restrictions?
-
-No.
-
-## Is this project affiliated with VidPlus?
-
-No affiliation is implied.
-
-## Is this project affiliated with TMDB or AniList?
-
-No affiliation is implied. If your application separately uses their APIs, follow their current terms and attribution requirements.
 
 ---
 
 # Third-party and legal notice
 
-This repository is an independent developer integration for a third-party embed service.
+This repository is an independent integration project.
 
-It does not host, upload, proxy, redistribute, or curate media files.
+It is not presented as an official VidUp SDK.
 
-Users and deployers are responsible for:
+No affiliation or endorsement by VidUp is implied.
 
-- complying with applicable laws,
-- respecting copyright and content-distribution rights,
-- complying with the current terms of any third-party services they use,
-- reviewing privacy and cookie implications of embedded content,
-- using TMDB/AniList data in accordance with the applicable terms if those services are separately integrated,
-- ensuring they have the rights or permissions appropriate to their use case.
+The project:
 
-VidPlus URLs, query parameters, servers, player behavior, content availability, and service availability can change independently of this repository.
+- does not host media,
+- does not upload media,
+- does not redistribute media,
+- does not resolve direct video streams,
+- does not decrypt player traffic,
+- does not proxy HLS/video segments.
 
-This package cannot guarantee permanent compatibility with an unaffiliated external service.
+Users and deployers are responsible for complying with:
+
+- applicable laws,
+- copyright requirements,
+- content-distribution rights,
+- third-party service terms,
+- privacy requirements,
+- TMDB/IMDb requirements when those services are used separately.
+
+VidUp can change its service, URLs, parameters, availability, or player behavior independently of this project.
 
 ---
 
 # Contributing
 
-Contributions are welcome.
+See:
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+[CONTRIBUTING.md](CONTRIBUTING.md)
 
-A strong contribution should:
+When changing embed behavior:
 
-- keep core behavior framework-independent,
-- avoid hard React/Vue dependencies in the root entry point,
-- preserve omission of unspecified query parameters,
-- include documentation for public API changes,
-- pass type checking,
-- pass the build,
-- preserve ESM/CJS/browser outputs,
-- explain any upstream compatibility assumptions.
+1. Check VidUp's current documentation.
+2. Do not copy VidPlus-only behavior into VidUp code.
+3. Preserve parameter casing.
+4. Add/update documentation.
+5. Run type checking.
+6. Run the build.
+7. Inspect package output.
 
-Run:
+Commands:
 
 ```bash
 npm run typecheck
@@ -1803,17 +2378,13 @@ npm run build
 npm run pack:check
 ```
 
-before opening a PR.
-
-Bug and feature-request forms are available through GitHub Issues.
-
 ---
 
 # Security policy
 
-See [SECURITY.md](SECURITY.md).
+See:
 
-Do not place credentials, access tokens, private API keys, or exploitable security details in a public issue.
+[SECURITY.md](SECURITY.md)
 
 ---
 
@@ -1821,14 +2392,32 @@ Do not place credentials, access tokens, private API keys, or exploitable securi
 
 MIT © 2026 Miguel Tamayo.
 
-See [LICENSE](LICENSE).
+See:
+
+[LICENSE](LICENSE)
 
 ---
 
-# Repository
+# Links
 
-**GitHub:** https://github.com/migtam628/vidplus-movie-player
+- **VidUp:** https://vidup.to/
+- **VidUp documentation:** https://vidup.to/#documentation
+- **Repository:** https://github.com/migtam628/vidplus-movie-player
+- **Issues:** https://github.com/migtam628/vidplus-movie-player/issues
 
-**Package name:** `vidplus-movie-player`
+---
 
-If this project is useful, contributions, issue reports, documentation improvements, and framework examples are welcome.
+## Current runtime summary
+
+```text
+Provider: VidUp
+Base URL: https://vidup.to
+Movies:   /movie/{IMDb-or-TMDB-ID}
+TV:       /tv/{IMDb-or-TMDB-ID}/{season}/{episode}
+Builder:  buildVidUpUrl()
+React:    vidplus-movie-player/react
+Vue:      vidplus-movie-player/vue
+Vanilla:  vidplus-movie-player/vanilla
+```
+
+The runtime integration is now VidUp-first.
