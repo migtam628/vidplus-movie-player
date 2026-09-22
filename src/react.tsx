@@ -15,7 +15,6 @@ export function MoviePlayer(props: MoviePlayerProps) {
     className = '',
     style = {},
     aspectRatio = '16/9',
-    ...rest
   } = props;
 
   const src = buildVidPlusUrl(props);
