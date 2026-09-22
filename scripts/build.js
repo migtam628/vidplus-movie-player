@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Simple build script using esbuild.
+ * Build script using esbuild.
  * Produces ESM + CJS for the main entry and each adapter.
  * Also generates .d.ts via tsc.
  */
@@ -15,6 +15,7 @@ const outDir = path.join(__dirname, '..', 'dist');
 if (fs.existsSync(outDir)) {
   fs.rmSync(outDir, { recursive: true });
 }
+
 fs.mkdirSync(outDir, { recursive: true });
 
 const shared = {
@@ -34,13 +35,16 @@ const entries = [
 
 async function build() {
   console.log('Generating .d.ts files...');
+
   try {
     execSync('npx tsc --emitDeclarationOnly --declaration --outDir dist', {
       stdio: 'inherit',
       cwd: path.join(__dirname, '..'),
     });
   } catch (e) {
-    console.warn('tsc declaration generation failed (types may be incomplete). Continuing...');
+    console.warn(
+      'tsc declaration generation failed (types may be incomplete). Continuing...'
+    );
   }
 
   for (const { entry, name } of entries) {
@@ -66,7 +70,7 @@ async function build() {
     entryPoints: ['src/vanilla.ts'],
     outfile: path.join(outDir, 'vanilla.browser.js'),
     format: 'iife',
-    globalName: 'VidPlusMoviePlayer',
+    globalName: 'VidUpMoviePlayer',
     external: [],
   });
 
