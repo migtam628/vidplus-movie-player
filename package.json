@@ -1,0 +1,96 @@
+{
+  "name": "vidplus-movie-player",
+  "version": "1.0.0",
+  "description": "Framework-agnostic VidPlus iframe URL builder and responsive MoviePlayer adapters for React, Next.js, Vue 3, Vanilla JS, and CDN usage.",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.mjs",
+      "require": "./dist/react.cjs"
+    },
+    "./vue": {
+      "types": "./dist/vue.d.ts",
+      "import": "./dist/vue.mjs",
+      "require": "./dist/vue.cjs"
+    },
+    "./vanilla": {
+      "types": "./dist/vanilla.d.ts",
+      "import": "./dist/vanilla.mjs",
+      "require": "./dist/vanilla.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "examples"
+  ],
+  "scripts": {
+    "build": "node scripts/build.js",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "typecheck": "tsc --noEmit",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run typecheck && npm run build",
+    "pack:check": "npm pack --dry-run"
+  },
+  "keywords": [
+    "vidplus",
+    "movie-player",
+    "video-player",
+    "embed",
+    "iframe",
+    "tmdb",
+    "anilist",
+    "react",
+    "nextjs",
+    "vue",
+    "vanilla-js",
+    "typescript"
+  ],
+  "author": "Miguel Tamayo",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/migtam628/vidplus-movie-player.git"
+  },
+  "bugs": {
+    "url": "https://github.com/migtam628/vidplus-movie-player/issues"
+  },
+  "homepage": "https://github.com/migtam628/vidplus-movie-player#readme",
+  "engines": {
+    "node": ">=16"
+  },
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "vue": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "esbuild": "^0.20.0",
+    "react": "^18.2.0",
+    "typescript": "^5.4.0",
+    "vue": "^3.4.0"
+  },
+  "sideEffects": false
+}
