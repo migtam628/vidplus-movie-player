@@ -1,7 +1,7 @@
 {
   "name": "vidplus-movie-player",
   "version": "1.0.0",
-  "description": "Framework-agnostic VidPlus iframe URL builder and responsive MoviePlayer adapters for React, Next.js, Vue 3, Vanilla JS, and CDN usage.",
+  "description": "Framework-agnostic VidUp iframe URL builder and responsive MoviePlayer adapters for React, Next.js, Vue 3, Vanilla JS, and CDN usage.",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -47,13 +47,13 @@
     "pack:check": "npm pack --dry-run"
   },
   "keywords": [
-    "vidplus",
+    "vidup",
     "movie-player",
     "video-player",
     "embed",
     "iframe",
     "tmdb",
-    "anilist",
+    "imdb",
     "react",
     "nextjs",
     "vue",
