@@ -1,14 +1,22 @@
-import { buildVidPlusUrl, getIframeAttrs } from './core';
+import { buildVidUpUrl, getIframeAttrs } from './core';
 import type { MoviePlayerProps } from './types';
 
 /**
- * React / Next.js MoviePlayer component.
+ * React / Next.js MoviePlayer component backed by VidUp.
  *
  * @example
- * <MoviePlayer type="movie" id={27205} primarycolor="00D4FF" />
+ * <MoviePlayer type="movie" id="tt0480249" autoPlay theme="E50914" />
  *
  * @example
- * <MoviePlayer type="tv" id={94997} season={1} episode={1} icons="netflix" />
+ * <MoviePlayer
+ *   type="tv"
+ *   id={1396}
+ *   season={1}
+ *   episode={1}
+ *   autoPlay
+ *   autoNext
+ *   nextButton
+ * />
  */
 export function MoviePlayer(props: MoviePlayerProps) {
   const {
@@ -17,12 +25,12 @@ export function MoviePlayer(props: MoviePlayerProps) {
     aspectRatio = '16/9',
   } = props;
 
-  const src = buildVidPlusUrl(props);
+  const src = buildVidUpUrl(props);
   const iframeAttrs = getIframeAttrs(props);
 
   return (
     <div
-      className={`vidplus-movie-player ${className}`.trim()}
+      className={`vidup-movie-player ${className}`.trim()}
       style={{
         position: 'relative',
         width: '100%',
