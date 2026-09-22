@@ -1,15 +1,23 @@
 import type { MoviePlayerOptions } from './types';
 
-const BASE_URL = 'https://player.vidplus.to/embed';
+export const VIDUP_BASE_URL = 'https://vidup.to';
 
 /**
- * Builds a fully-qualified VidPlus embed URL from the given options.
- * Throws if required fields for the content type are missing.
+ * Builds a fully-qualified VidUp embed URL.
+ *
+ * Movie:
+ *   https://vidup.to/movie/{IMDb-or-TMDB-ID}
+ *
+ * TV:
+ *   https://vidup.to/tv/{IMDb-or-TMDB-ID}/{season}/{episode}
+ *
+ * VidUp query parameter names are intentionally preserved with their documented
+ * casing (for example autoPlay, autoNext, nextButton and startAt).
  */
-export function buildVidPlusUrl(options: MoviePlayerOptions): string {
-  const { type, id, season, episode, dub, ...rest } = options;
+export function buildVidUpUrl(options: MoviePlayerOptions): string {
+  const { type, id, season, episode } = options;
 
-  if (!type || !id) {
+  if (!type || id === undefined || id === null || String(id).trim() === '') {
     throw new Error('[vidplus-movie-player] "type" and "id" are required');
   }
 
@@ -17,59 +25,74 @@ export function buildVidPlusUrl(options: MoviePlayerOptions): string {
 
   switch (type) {
     case 'movie':
-      path = `/movie/${id}`;
+      path = `/movie/${encodeURIComponent(String(id))}`;
       break;
+
     case 'tv':
       if (season == null || episode == null) {
-        throw new Error('[vidplus-movie-player] "season" and "episode" are required for type "tv"');
+        throw new Error(
+          '[vidplus-movie-player] "season" and "episode" are required for type "tv"'
+        );
       }
-      path = `/tv/${id}/${season}/${episode}`;
+
+      path =
+        `/tv/${encodeURIComponent(String(id))}` +
+        `/${encodeURIComponent(String(season))}` +
+        `/${encodeURIComponent(String(episode))}`;
       break;
-    case 'anime':
-      if (episode == null) {
-        throw new Error('[vidplus-movie-player] "episode" is required for type "anime"');
-      }
-      path = `/anime/${id}/${episode}`;
-      break;
+
     default:
-      throw new Error(`[vidplus-movie-player] Unknown type "${type}". Use "movie", "tv" or "anime".`);
+      throw new Error(
+        `[vidplus-movie-player] Unknown type "${String(type)}". Use "movie" or "tv".`
+      );
   }
 
-  const params = new URLSearchParams();
+  const search = new URLSearchParams();
 
   const set = (key: string, value: unknown) => {
     if (value === undefined || value === null) return;
+
     if (typeof value === 'boolean') {
-      params.set(key, value ? 'true' : 'false');
-    } else {
-      params.set(key, String(value));
+      search.set(key, value ? 'true' : 'false');
+      return;
     }
+
+    search.set(key, String(value));
   };
 
-  if (type === 'anime' && dub !== undefined) {
-    set('dub', dub);
+  // Preserve VidUp's parameter names and casing.
+  set('autoPlay', options.autoPlay);
+  set('autoNext', options.autoNext);
+  set('nextButton', options.nextButton);
+  set('startAt', options.startAt);
+  set('theme', options.theme);
+  set('sub', options.sub);
+  set('lang', options.lang);
+  set('chromecast', options.chromecast);
+  set('poster', options.poster);
+  set('title', options.title);
+
+  if (options.extraParams) {
+    for (const [key, value] of Object.entries(options.extraParams)) {
+      set(key, value);
+    }
   }
 
-  const layoutKeys = new Set([
-    'className',
-    'style',
-    'aspectRatio',
-    'allowFullScreen',
-    'titleAttr',
-    'loading',
-  ]);
-
-  for (const [key, value] of Object.entries(rest)) {
-    if (layoutKeys.has(key)) continue;
-    set(key.toLowerCase(), value);
-  }
-
-  const query = params.toString();
-  return `${BASE_URL}${path}${query ? `?${query}` : ''}`;
+  const query = search.toString();
+  return `${VIDUP_BASE_URL}${path}${query ? `?${query}` : ''}`;
 }
 
 /**
- * Returns the recommended iframe attributes for accessibility & security.
+ * Backward-compatible alias for code written against the original VidPlus
+ * version of this repository. It now generates VidUp URLs.
+ *
+ * @deprecated Use buildVidUpUrl().
+ */
+export const buildVidPlusUrl = buildVidUpUrl;
+
+/**
+ * Returns recommended iframe attributes for accessibility and common playback
+ * capabilities. These affect the local iframe, not VidUp's query parameters.
  */
 export function getIframeAttrs(options: MoviePlayerOptions) {
   return {
@@ -78,6 +101,6 @@ export function getIframeAttrs(options: MoviePlayerOptions) {
     allowFullScreen: options.allowFullScreen !== false,
     loading: options.loading || 'lazy',
     referrerPolicy: 'strict-origin-when-cross-origin' as const,
-    title: options.titleAttr || 'VidPlus Player',
+    title: options.titleAttr || 'VidUp Player',
   };
 }
